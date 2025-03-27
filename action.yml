@@ -1,11 +1,15 @@
 name: 'Image Compression Action'
-description: 'Compress images in a pull request and commit changes if compression exceeds 30%'
+description: 'Compress images in a pull request and commit changes if compression exceeds the defined threshold'
 author: 'YourName'
 inputs:
   max_quality:
     description: 'Maximum quality for jpegoptim (1-100)'
     required: false
     default: '80'
+  compression_threshold:
+    description: 'Compression threshold in percentage (default: 30%)'
+    required: false
+    default: '30'
 
 runs:
   using: "composite"
@@ -47,6 +51,7 @@ runs:
         echo "Starting image compression..."
         DECODED_FILES=$(echo "${{ env.changed_files_base64 }}" | base64 --decode)
         declare -a COMPRESSED_IMAGES=()
+        THRESHOLD=${{ inputs.compression_threshold }}
         while IFS= read -r file; do
           echo "Target file for processing: $file"
           if [[ "$file" == *.jpg || "$file" == *.jpeg || "$file" == *.png ]]; then
@@ -60,11 +65,11 @@ runs:
             fi
             COMPRESSED_SIZE=$(stat -c%s "$file")
             echo "Compressed size: $COMPRESSED_SIZE bytes"
-            if (( (ORIGINAL_SIZE - COMPRESSED_SIZE) * 100 / ORIGINAL_SIZE >= 30 )); then
-              echo "$file compressed by more than 30%"
+            if (( (ORIGINAL_SIZE - COMPRESSED_SIZE) * 100 / ORIGINAL_SIZE >= THRESHOLD )); then
+              echo "$file compressed by more than ${THRESHOLD}%"
               COMPRESSED_IMAGES+=("$file")
             else
-              echo "$file was not compressed by 30% or more."
+              echo "$file was not compressed by ${THRESHOLD}% or more."
             fi
           else
             echo "Skipping non-image file: $file"
