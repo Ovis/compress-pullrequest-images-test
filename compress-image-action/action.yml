@@ -1,0 +1,41 @@
+# compress-image-action/action.yml
+name: "Compress Images"
+description: "Compresses images in a PR and pushes the changes back."
+author: "YourName"
+inputs:
+  quality:
+    description: "JPEG圧縮のクオリティ (デフォルト80)"
+    required: false
+    default: "80"
+  min_saving_percent:
+    description: "再コミットする最小の圧縮率 (デフォルト30%)"
+    required: false
+    default: "30"
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jpegoptim optipng coreutils
+
+    - name: Compress Images
+      run: |
+        chmod +x ./compress.sh
+        ./compress.sh ${{ github.base_ref }} ${{ inputs.quality }} ${{ inputs.min_saving_percent }}
+
+    - name: Push Changes
+      if: ${{ env.compressed == 'true' }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git checkout ${{ github.head_ref }}
+        git add .
+        git commit -m "Compressed images"
+        git push origin HEAD:${{ github.head_ref }} || (
+          git pull --rebase origin ${{ github.head_ref }} 
+          git push origin HEAD:${{ github.head_ref }}
+        )

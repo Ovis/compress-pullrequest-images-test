@@ -1,0 +1,17 @@
+name: Compress Images on PR
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  compress-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compress Images
+        uses: ./compress-image-action
+        with:
+          quality: "80"
+          min_saving_percent: "30"
