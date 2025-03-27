@@ -1,4 +1,3 @@
-# compress-image-action/action.yml
 name: "Compress Images"
 description: "Compresses images in a PR and pushes the changes back."
 author: "YourName"
@@ -21,11 +20,13 @@ runs:
       run: |
         sudo apt-get update
         sudo apt-get install -y jpegoptim optipng coreutils
+      shell: bash
 
     - name: Compress Images
       run: |
         chmod +x ./compress.sh
         ./compress.sh ${{ github.base_ref }} ${{ inputs.quality }} ${{ inputs.min_saving_percent }}
+      shell: bash
 
     - name: Push Changes
       if: ${{ env.compressed == 'true' }}
@@ -39,3 +40,4 @@ runs:
           git pull --rebase origin ${{ github.head_ref }} 
           git push origin HEAD:${{ github.head_ref }}
         )
+      shell: bash
