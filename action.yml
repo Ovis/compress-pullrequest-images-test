@@ -19,11 +19,13 @@ runs:
       run: |
         sudo apt-get update
         sudo apt-get install -y jpegoptim optipng coreutils
+      shell: bash
 
     # ベースブランチの取得
     - name: Fetch base branch
       run: |
         git fetch origin "${{ github.base_ref }}" --depth=1
+      shell: bash
 
     # 変更されたファイルを取得し、BASE64エンコードして環境変数に設定
     - name: Check changed files
@@ -35,10 +37,12 @@ runs:
         BASE64_CHANGED=$(base64 -w 0 changed_files.txt)
         echo "changed_files_base64=$BASE64_CHANGED" >> $GITHUB_ENV
         rm -f changed_files.txt
+      shell: bash
 
     # 変更された画像を圧縮
     - name: Compress changed images
       id: compress_images
+      shell: bash
       run: |
         echo "Starting image compression..."
         DECODED_FILES=$(echo "${{ env.changed_files_base64 }}" | base64 --decode)
@@ -73,6 +77,7 @@ runs:
     # 圧縮画像が存在すればコミット & プッシュ
     - name: Commit and push if images compressed
       if: env.compressed_images_base64 != 'Cg=='
+      shell: bash
       run: |
         DECODED_COMPRESSED=$(echo "${{ env.compressed_images_base64 }}" | base64 --decode)
         echo "Compressed images:"
